@@ -4,9 +4,9 @@ import webbrowser
 
 from urllib.parse import urljoin, urlparse
 from urllib.parse import parse_qs
-from dataclasses import dataclass
-
+from dataclasses import dataclass, field
 from requests_oauthlib import OAuth2Session
+from prettytable import PrettyTable
 
 @dataclass
 class Auth:
@@ -32,7 +32,6 @@ class Auth:
 
         self.client_id = creds["client_id"]
         self.client_secret = creds["client_secret"]
-        self.access_token = creds["access_token"]
         return
 
     def get_token_code(self, url: str) -> str:
@@ -99,6 +98,70 @@ class SummaryActivity:
     avg_speed: float = 0.0
     max_speed: float = 0.0
 
+    def get_fields(self) -> list:
+        """
+        get list of fields
+        """
+        return [
+            "name",
+            "distance (miles)",
+            "moving_time",
+            "elapsed_time",
+            "total_elevation_gain",
+            "avg_speed",
+            "max_speed"
+        ]
+
+    def get_row_data(self):
+        """
+        format data to be inputted into pretty table
+        """
+        return [
+            self.name,
+            self.convert_meters_to_miles(self.distance),
+            self.moving_time,
+            self.elapsed_time,
+            self.total_elevation_gain,
+            self.avg_speed,
+            self.max_speed
+        ]
+
+    def convert_meters_to_miles(self, distance: float):
+        """
+        convert meters to miles
+        """
+        return distance * 0.000621371192
+
+
+@dataclass
+class Printer:
+    """
+    handles printing tables 
+    """
+    printer = PrettyTable()
+    count: int = 15
+    activities: list = field(default_factory=list)
+
+    def get_columns(self):
+        """
+        get the columns for the table
+        """
+        fields = SummaryActivity().get_fields()
+        return fields
+
+    def print_summary(self):
+        """
+        print summary table
+        """
+        self.printer.field_names = self.get_columns()
+        count = 0
+        for activity in self.activities:
+            if count < self.count:
+                self.printer.add_row(activity.get_row_data())
+            count += 1
+        print(self.printer)
+        return
+
 
 @dataclass
 class API:
@@ -114,7 +177,7 @@ class API:
         """
         return urljoin(self.base_url, endpoint)
 
-    def get(self, url: str, params: dict = None):
+    def get(self, url: str, params: dict = None) -> dict:
         """
         handle get requests
         """
@@ -124,7 +187,7 @@ class API:
         response = requests.get(url, headers=headers, params=params)
         return response.json()
 
-    def get_all_activities(self):
+    def get_all_activities(self) -> list:
         """
         get all athlete activities
         """
@@ -136,22 +199,14 @@ class API:
 
         all_activities = []
         for activity in data:
-            name = activity["name"]
-            distance = activity["distance"]
-            moving_time = activity["moving_time"]
-            elapsed_time = activity["elapsed_time"]
-            total_elevation_gain = activity["total_elevation_gain"]
-            avg_speed = activity["average_speed"]
-            max_speed = activity["max_speed"]
-
             act = SummaryActivity(
-                name=name,
-                distance=distance,
-                moving_time=moving_time,
-                elapsed_time=elapsed_time,
-                total_elevation_gain=total_elevation_gain,
-                avg_speed=avg_speed,
-                max_speed=max_speed
+                name=activity["name"],
+                distance=activity["distance"],
+                moving_time=activity["moving_time"],
+                elapsed_time=activity["elapsed_time"],
+                total_elevation_gain=activity["total_elevation_gain"],
+                avg_speed=activity["average_speed"],
+                max_speed=activity["max_speed"]
             )
             all_activities.append(act)
 
@@ -168,8 +223,9 @@ def main():
     api = API(access_token=auth.access_token)
     activities = api.get_all_activities()
 
-    print(f"{activities=}")
-    print(f"{len(activities)=}")
+    # printer
+    p = Printer(activities=activities)
+    p.print_summary()
 
     return
 
