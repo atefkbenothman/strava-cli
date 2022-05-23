@@ -14,14 +14,14 @@ class Auth:
     custom auth class that handles retrieving access tokens
     """
     authorize_base_url: str = "https://www.strava.com/oauth/authorize"
-    token_base_url: str     = "https://www.strava.com/oauth/token"
+    token_base_url: str = "https://www.strava.com/oauth/token"
 
-    access_token: str  = ""
-    client_id: str     = ""
+    access_token: str = ""
+    client_id: str = ""
     client_secret: str = ""
 
     redirect_uri: str = "http://localhost"
-    scope: str        = "read_all,profile:read_all,activity:read_all"
+    scope: str = "read_all,profile:read_all,activity:read_all"
 
     def set_creds(self, file_name: str):
         """
@@ -87,6 +87,20 @@ class Auth:
 
 
 @dataclass
+class SummaryActivity:
+    """
+    summary activity model
+    """
+    name: str = ""
+    distance: float = 0.0
+    moving_time: int = 0
+    elapsed_time: int = 0
+    total_elevation_gain: float = 0.0
+    avg_speed: float = 0.0
+    max_speed: float = 0.0
+
+
+@dataclass
 class API:
     """
     custom api class
@@ -100,14 +114,14 @@ class API:
         """
         return urljoin(self.base_url, endpoint)
 
-    def get(self, url: str):
+    def get(self, url: str, params: dict = None):
         """
         handle get requests
         """
         headers = {
             "Authorization": f"Bearer {self.access_token}"
         }
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, params=params)
         return response.json()
 
     def get_all_activities(self):
@@ -115,8 +129,33 @@ class API:
         get all athlete activities
         """
         url = self.generate_url("athlete/activities")
-        self.get(url)
-        return
+        params = {
+            "per_page": 100
+        }
+        data = self.get(url, params=params)
+
+        all_activities = []
+        for activity in data:
+            name = activity["name"]
+            distance = activity["distance"]
+            moving_time = activity["moving_time"]
+            elapsed_time = activity["elapsed_time"]
+            total_elevation_gain = activity["total_elevation_gain"]
+            avg_speed = activity["average_speed"]
+            max_speed = activity["max_speed"]
+
+            act = SummaryActivity(
+                name=name,
+                distance=distance,
+                moving_time=moving_time,
+                elapsed_time=elapsed_time,
+                total_elevation_gain=total_elevation_gain,
+                avg_speed=avg_speed,
+                max_speed=max_speed
+            )
+            all_activities.append(act)
+
+        return all_activities
 
 
 def main():
@@ -127,7 +166,10 @@ def main():
 
     # api
     api = API(access_token=auth.access_token)
-    api.get_all_activities()
+    activities = api.get_all_activities()
+
+    print(f"{activities=}")
+    print(f"{len(activities)=}")
 
     return
 
