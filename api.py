@@ -1,6 +1,7 @@
 import json
 import requests
 import webbrowser
+import datetime
 
 from urllib.parse import urljoin, urlparse
 from urllib.parse import parse_qs
@@ -112,10 +113,10 @@ class SummaryActivity:
         """
         return [
             "name",
-            "distance (miles)",
+            "distance (mi)",
             "moving_time",
             "elapsed_time",
-            "total_elevation_gain",
+            "total_elevation_gain (ft)",
             "avg_speed",
             "max_speed"
         ]
@@ -126,13 +127,95 @@ class SummaryActivity:
         """
         return [
             self.name,
-            self.convert_meters_to_miles(self.distance),
-            self.moving_time,
-            self.elapsed_time,
-            self.total_elevation_gain,
-            self.avg_speed,
-            self.max_speed
+            f"{self.convert_meters_to_miles(self.distance):.2f}",
+            self.convert_seconds_to_hours(self.moving_time),
+            self.convert_seconds_to_hours(self.elapsed_time),
+            f"{self.convert_meters_to_feet(self.total_elevation_gain):.2f}",
+            f"{self.convert_meters_per_second_to_miles_per_hour(self.avg_speed):.2f}",
+            f"{self.convert_meters_per_second_to_miles_per_hour(self.max_speed):.2f}",
         ]
+
+    def get_totals_row_data(self, activity_list: list) -> list:
+        """
+        calculate the total for the given activities
+        """
+        total_distance: float = 0.0
+        total_moving_time: int= 0.0
+        total_elapsed_time: int = 0.0
+        total_total_elevation_gain: float = 0.0
+
+        rows = []
+        for activity in activity_list:
+            total_distance += activity.distance
+            total_moving_time += activity.moving_time
+            total_elapsed_time += activity.elapsed_time
+            total_total_elevation_gain += activity.total_elevation_gain
+            rows.append(activity)
+
+        total = SummaryActivity(
+            name="Total:",
+            distance=total_distance,
+            moving_time=total_moving_time,
+            elapsed_time=total_elapsed_time,
+            total_elevation_gain=total_total_elevation_gain,
+            avg_speed=0.0,
+            max_speed=0.0
+        )
+        activity_list.append(total)
+        return activity_list
+
+    def get_avg_row_data(self, activity_list: list) -> list:
+        """
+        calculate the avg for the given activities
+        """
+        total_distance: float = 0.0
+        total_moving_time: int= 0.0
+        total_elapsed_time: int = 0.0
+        total_total_elevation_gain: float = 0.0
+        total_avg_speed: float = 0.0
+        total_max_speed: float = 0.0
+
+        rows = []
+        for activity in activity_list:
+            total_distance += activity.distance
+            total_moving_time += activity.moving_time
+            total_elapsed_time += activity.elapsed_time
+            total_total_elevation_gain += activity.total_elevation_gain
+            total_avg_speed += activity.avg_speed
+            total_max_speed += activity.max_speed
+            rows.append(activity)
+
+        total = SummaryActivity(
+            name="Total:",
+            distance=total_distance,
+            moving_time=total_moving_time,
+            elapsed_time=total_elapsed_time,
+            total_elevation_gain=total_total_elevation_gain,
+            avg_speed=0.0,
+            max_speed=0.0
+        )
+        activity_list.append(total)
+
+        # calculate average
+        avg_distance = total_distance / len(rows)
+        avg_moving_time = total_moving_time / len(rows)
+        avg_elapsed_time = total_elapsed_time / len(rows)
+        avg_elevation_gain = total_total_elevation_gain / len(rows)
+        avg_avg_speed = total_avg_speed / len(rows)
+        avg_max_speed = total_max_speed / len(rows)
+
+        avg = SummaryActivity(
+            name="Avg:",
+            distance=avg_distance,
+            moving_time=avg_moving_time,
+            elapsed_time=avg_elapsed_time,
+            total_elevation_gain=avg_elevation_gain,
+            avg_speed=avg_avg_speed,
+            max_speed=avg_max_speed
+        )
+        activity_list.append(avg)
+
+        return activity_list
 
     def convert_meters_to_miles(self, distance: float):
         """
@@ -140,6 +223,23 @@ class SummaryActivity:
         """
         return distance * 0.000621371192
 
+    def convert_meters_to_feet(self, distance: float):
+        """
+        convert meters to feet
+        """
+        return distance / 0.3048
+
+    def convert_seconds_to_hours(self, seconds: int):
+        """
+        convert seconds to hours
+        """
+        return str(datetime.timedelta(seconds=seconds))
+
+    def convert_meters_per_second_to_miles_per_hour(self, mps: float):
+        """
+        convert meters/sec to miles/hour
+        """
+        return mps * 2.2369
 
 @dataclass
 class Printer:
@@ -147,15 +247,49 @@ class Printer:
     handles printing tables 
     """
     printer = PrettyTable()
-    count: int = 15
     activities: list = field(default_factory=list)
 
-    def get_columns(self):
+    def get_columns(self) -> list:
         """
         get the columns for the table
         """
         fields = SummaryActivity().get_fields()
         return fields
+
+    def get_rows(self, activities: list) -> list:
+        """
+        get the rows for the table
+        """
+        rows = []
+        for activity in activities:
+            rows.append(activity.get_row_data())
+        return rows
+
+    def get_activities(self, count: int = 100) -> list:
+        """
+        get the rows for the table
+        """
+        activities = []
+        counter = 0
+        for activity in self.activities:
+            if counter < count:
+                activities.append(activity)
+            counter += 1
+        return activities
+
+    def get_totals_row(self, activities: list) -> list:
+        """
+        get the totals row for the table
+        """
+        activities_with_total = SummaryActivity().get_totals_row_data(activities)
+        return activities_with_total
+
+    def get_avg_row(self, activities: list) -> list:
+        """
+        get the avg row for the table
+        """
+        activities_with_avg = SummaryActivity().get_avg_row_data(activities)
+        return activities_with_avg
 
     def print_summary(self):
         """
@@ -166,11 +300,27 @@ class Printer:
             return
 
         self.printer.field_names = self.get_columns()
-        count = 0
-        for activity in self.activities:
-            if count < self.count:
-                self.printer.add_row(activity.get_row_data())
-            count += 1
+        self.printer.add_rows(self.get_activities(count=5))
+
+        print(self.printer)
+        return
+
+    def print_summary_with_total(self, count: int = 10):
+        """
+        does the same thing as print summary but adds the 'total' row to the table
+        """
+        if self.activities is None:
+            print(f"no activities...")
+            return
+
+        self.printer.field_names = self.get_columns()
+
+        # add total row
+        acts = self.get_activities(count=count)
+        rows = self.get_rows(self.get_avg_row(acts))
+
+        self.printer.add_rows(rows)
+
         print(self.printer)
         return
 
@@ -241,7 +391,7 @@ def main():
 
     # printer
     p = Printer(activities=activities)
-    p.print_summary()
+    p.print_summary_with_total(count=40)
 
     return
 
