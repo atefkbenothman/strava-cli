@@ -61,6 +61,7 @@ class Auth:
 
         access_token = response.json()["access_token"]
         self.access_token = access_token
+        print(f"{access_token=}")
         return
 
     def authorize(self):
@@ -68,6 +69,13 @@ class Auth:
         authorize
         """
         print(f"authorizing...")
+
+        # first, ask if user already has an access token
+        has_token = input("do you already have an access token? [y/N]: ")
+        if has_token == "y":
+            token = input("token: ")
+            self.access_token = token
+            return
 
         # generate auth url
         strava = OAuth2Session(self.client_id, scope=self.scope, redirect_uri=self.redirect_uri)
@@ -153,6 +161,10 @@ class Printer:
         """
         print summary table
         """
+        if self.activities is None:
+            print(f"no activities...")
+            return
+
         self.printer.field_names = self.get_columns()
         count = 0
         for activity in self.activities:
@@ -185,7 +197,7 @@ class API:
             "Authorization": f"Bearer {self.access_token}"
         }
         response = requests.get(url, headers=headers, params=params)
-        return response.json()
+        return response.status_code, response.json()
 
     def get_all_activities(self) -> list:
         """
@@ -195,7 +207,11 @@ class API:
         params = {
             "per_page": 100
         }
-        data = self.get(url, params=params)
+        status_code, data = self.get(url, params=params)
+
+        if status_code != 200:
+            print(f"{status_code=}, {data=}")
+            return
 
         all_activities = []
         for activity in data:
