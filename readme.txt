@@ -1,6 +1,6 @@
 strava api cli
 
-![tests](https://github.com/atefkbenothman/strava/actions/workflows/test.yml/badge.svg)
+![tests](https://github.com/atefkbenothman/strava/actions/workflows/tests.yml/badge.svg)
 
 todo:
 [ ] write tests
