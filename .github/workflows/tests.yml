@@ -1,7 +1,9 @@
 name: Tests
 
 on:
- - push
+ push:
+  paths-ignore:
+    - '**/readme.md'
 
 jobs:
   tox:
