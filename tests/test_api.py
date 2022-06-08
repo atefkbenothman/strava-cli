@@ -1,4 +1,4 @@
-from src.strava.api import API
+from strava.api import API
 
 TEST_BASE_URL = "https://test.com"
 TEST_API_ENDPOINT = "athelete/activities"
