@@ -1,4 +1,4 @@
-from models import SummaryActivity
+from .models import SummaryActivity
 
 from dataclasses import dataclass, field
 from prettytable import PrettyTable

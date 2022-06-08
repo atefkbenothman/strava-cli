@@ -1,7 +1,7 @@
 import json
 import requests
 
-from models import SummaryActivity
+from .models import SummaryActivity
 
 from urllib.parse import urljoin, urlparse
 from urllib.parse import parse_qs
