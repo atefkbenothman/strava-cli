@@ -6,8 +6,9 @@ from dataclasses import dataclass
 
 from requests_oauthlib import OAuth2Session
 
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urlparse
 from urllib.parse import parse_qs
+
 
 @dataclass
 class Auth:
@@ -15,10 +16,10 @@ class Auth:
   custom auth handler for strava which uses oauth2
   """
   authorize_base_url: str = "https://www.strava.com/oauth/authorize"
-  token_base_url: str     = "https://www.strava.com/oauth/token"
+  token_base_url: str = "https://www.strava.com/oauth/token"
 
-  access_token: str  = ""
-  client_id: str     = ""
+  access_token: str = ""
+  client_id: str = ""
   client_secret: str = ""
 
   redirect_uri: str = "http://localhost"
@@ -45,7 +46,7 @@ class Auth:
 
   def token_exchange(self, code: str):
       """
-      get token 
+      get token
       """
       data = {
           "client_id": self.client_id,
@@ -57,7 +58,7 @@ class Auth:
 
       # set access token
       if "access_token" not in response.json():
-          print(f"error setting access token!")
+          print("error setting access token!")
           return
 
       access_token = response.json()["access_token"]
@@ -69,7 +70,7 @@ class Auth:
       """
       authorize
       """
-      print(f"authorizing...")
+      print("authorizing...")
 
       # first, ask if user already has an access token
       has_token = input("do you already have an access token? [y/N]: ")
@@ -79,7 +80,11 @@ class Auth:
           return
 
       # generate auth url
-      strava = OAuth2Session(self.client_id, scope=self.scope, redirect_uri=self.redirect_uri)
+      strava = OAuth2Session(
+          self.client_id,
+          scope=self.scope,
+          redirect_uri=self.redirect_uri
+        )
       auth_url, state = strava.authorization_url(self.authorize_base_url)
 
       # open url in browser

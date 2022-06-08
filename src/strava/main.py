@@ -1,6 +1,7 @@
-from auth    import Auth
-from api     import API
-from printer import Printer
+from strava.auth import Auth
+from strava.api import API
+from strava.printer import Printer
+
 
 def main():
   """
@@ -22,6 +23,7 @@ def main():
   printer.print_summary_with_total(count=c)
 
   return
+
 
 if __name__ == "__main__":
   main()

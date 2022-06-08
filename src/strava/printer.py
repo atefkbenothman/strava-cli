@@ -1,12 +1,13 @@
-from .models import SummaryActivity
+from strava.models import SummaryActivity
 
 from dataclasses import dataclass, field
 from prettytable import PrettyTable
 
+
 @dataclass
 class Printer:
     """
-    handles printing tables 
+    handles printing tables
     """
     printer = PrettyTable()
     activities: list = field(default_factory=list)
@@ -57,7 +58,7 @@ class Printer:
         print summary table
         """
         if self.activities is None:
-            print(f"no activities...")
+            print("no activities...")
             return
 
         self.printer.field_names = self.get_columns()
@@ -71,7 +72,7 @@ class Printer:
         does the same thing as print summary but adds the 'total' row to the table
         """
         if self.activities is None:
-            print(f"no activities...")
+            print("no activities...")
             return
 
         self.printer.field_names = self.get_columns()

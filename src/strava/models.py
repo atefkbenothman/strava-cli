@@ -1,6 +1,7 @@
 import datetime
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+
 
 @dataclass
 class SummaryActivity:
@@ -21,14 +22,14 @@ class SummaryActivity:
         get list of fields
         """
         return [
-           "id" ,
-            "name",
-            "distance (mi)",
-            "moving_time",
-            "elapsed_time",
-            "total_elevation_gain (ft)",
-            "avg_speed",
-            "max_speed"
+           "id",
+           "name",
+           "distance (mi)",
+           "moving_time",
+           "elapsed_time",
+           "total_elevation_gain (ft)",
+           "avg_speed",
+           "max_speed"
         ]
 
     def get_row_data(self):
@@ -42,8 +43,8 @@ class SummaryActivity:
             self.convert_seconds_to_hours(self.moving_time),
             self.convert_seconds_to_hours(self.elapsed_time),
             f"{self.convert_meters_to_feet(self.total_elevation_gain):.2f}",
-            f"{self.convert_meters_per_second_to_miles_per_hour(self.avg_speed):.2f}",
-            f"{self.convert_meters_per_second_to_miles_per_hour(self.max_speed):.2f}",
+            f"{self.convert_meters_per_second_to_mph(self.avg_speed):.2f}",
+            f"{self.convert_meters_per_second_to_mph(self.max_speed):.2f}",
         ]
 
     def get_totals_row_data(self, activity_list: list) -> list:
@@ -51,7 +52,7 @@ class SummaryActivity:
         calculate the total for the given activities
         """
         total_distance: float = 0.0
-        total_moving_time: int= 0.0
+        total_moving_time: int = 0.0
         total_elapsed_time: int = 0.0
         total_total_elevation_gain: float = 0.0
 
@@ -81,7 +82,7 @@ class SummaryActivity:
         calculate the avg for the given activities
         """
         total_distance: float = 0.0
-        total_moving_time: int= 0.0
+        total_moving_time: int = 0.0
         total_elapsed_time: int = 0.0
         total_total_elevation_gain: float = 0.0
         total_avg_speed: float = 0.0
@@ -149,7 +150,7 @@ class SummaryActivity:
         """
         return str(datetime.timedelta(seconds=seconds))
 
-    def convert_meters_per_second_to_miles_per_hour(self, mps: float):
+    def convert_meters_per_second_to_mph(self, mps: float):
         """
         convert meters/sec to miles/hour
         """

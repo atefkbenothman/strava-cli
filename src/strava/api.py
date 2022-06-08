@@ -1,12 +1,11 @@
-import json
 import requests
 
-from .models import SummaryActivity
+from strava.models import SummaryActivity
 
-from urllib.parse import urljoin, urlparse
-from urllib.parse import parse_qs
+from urllib.parse import urljoin
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+
 
 @dataclass
 class API:
