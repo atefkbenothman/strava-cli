@@ -77,6 +77,9 @@ class Printer:
 
         self.printer.field_names = self.get_columns()
 
+        # set the alignment to the right
+        self.printer.align = "r"
+
         # add total row
         acts = self.get_activities(count=count)
         rows = self.get_rows(self.get_avg_row(acts))
