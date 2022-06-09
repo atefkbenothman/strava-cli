@@ -12,3 +12,6 @@ venv/
 
 # tox
 .tox/
+
+# vscode
+.vscode/
