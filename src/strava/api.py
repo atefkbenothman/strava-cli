@@ -1,10 +1,14 @@
 import requests
-
-from strava.models import SummaryActivity
-
 from urllib.parse import urljoin
-
 from dataclasses import dataclass
+
+from strava.models import (
+    DetailedAthlete,
+    SummaryActivity,
+    # DetailedSegmentEffort,
+    ActivityTotal,
+    ActivityStats
+)
 
 
 @dataclass
@@ -31,8 +35,102 @@ class API:
         response = requests.get(url, headers=headers, params=params)
         return response.status_code, response.json()
 
+    def get_athlete(self) -> DetailedAthlete:
+        """
+        get the current authenticated athlete.
+        """
+        url = self.generate_url("athlete")
+        status_code, data = self.get(url)
+
+        if status_code != 200:
+            print(f"{status_code=}, {data=}")
+            return
+
+        athlete = DetailedAthlete(
+            id=data["id"],
+            firstname=data["firstname"],
+            lastname=data["lastname"],
+            profile=data["profile"],
+            city=data["city"],
+            state=data["state"],
+            country=data["country"],
+            sex=data["sex"]
+        )
+
+        return athlete
+
+    def get_athlete_stats(self) -> ActivityStats():
+        """
+        get the activity stats of an athlete
+        """
+        athlete: DetailedAthlete = self.get_athlete()
+
+        url = self.generate_url(f"athletes/{athlete.id}/stats")
+        status_code, data = self.get(url)
+
+        print(url)
+
+        if status_code != 200:
+            print(f"{status_code=}, {data=}")
+            return
+
+        print(data)
+
+        recent_ride_totals = ActivityTotal(
+            count=data["recent_ride_totals"]["count"],
+            distance=data["recent_ride_totals"]["distance"],
+            moving_time=data["recent_ride_totals"]["moving_time"],
+            elapsed_time=data["recent_ride_totals"]["elapsed_time"],
+            elevation_gain=data["recent_ride_totals"]["elevation_gain"],
+            achievement_count=data["recent_ride_totals"]["achievement_count"],
+        )
+
+        ytd_ride_totals = ActivityTotal(
+            count=data["ytd_ride_totals"]["count"],
+            distance=data["ytd_ride_totals"]["distance"],
+            moving_time=data["ytd_ride_totals"]["moving_time"],
+            elapsed_time=data["ytd_ride_totals"]["elapsed_time"],
+            elevation_gain=data["ytd_ride_totals"]["elevation_gain"],
+            # achievement_count=data["ytd_ride_totals"]["achievement_count"],
+        )
+
+        all_ride_totals = ActivityTotal(
+            count=data["all_ride_totals"]["count"],
+            distance=data["all_ride_totals"]["distance"],
+            moving_time=data["all_ride_totals"]["moving_time"],
+            elapsed_time=data["all_ride_totals"]["elapsed_time"],
+            elevation_gain=data["all_ride_totals"]["elevation_gain"],
+            # achievement_count=data["all_ride_totals"]["achievement_count"],
+        )
+
+        stats = ActivityStats(
+            biggest_ride_distance=data["biggest_ride_distance"],
+            biggest_climb_elevation_gain=data["biggest_climb_elevation_gain"],
+            recent_ride_totals=recent_ride_totals,
+            ytd_ride_totals=ytd_ride_totals,
+            all_ride_totals=all_ride_totals
+        )
+
+        return stats
+
+    def get_segment_efforts(self) -> list:
+        """
+        get the set of the athletes segment efoofrts for a given segment
+        """
+        url = self.generate_url("athlete")
+        status_code, data = self.get(url)
+
+        if status_code != 200:
+            print(f"{status_code=}, {data=}")
+            return
+
+        print(data)
+
+        return
+
     def get_activities(self, count: int = 0) -> list:
         """
+        TODO: refactor entire function...
         get athlete activities. if count param set to 0, get all
         """
         url = self.generate_url("athlete/activities")

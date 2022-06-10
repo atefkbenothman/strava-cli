@@ -1,8 +1,69 @@
 import datetime
-
 from dataclasses import dataclass
 
 
+# https://developers.strava.com/docs/reference/#api-models-ActivityTotal
+@dataclass
+class ActivityTotal:
+    """
+    a roll up of metrics pertaining to a set of activities
+    """
+    count: int = 0
+    distance: float = 0.0
+    moving_time: int = 0
+    elapsed_time: int = 0
+    elevation_gain: float = 0.0
+    achievement_count: int = 0
+
+
+# https://developers.strava.com/docs/reference/#api-models-ActivityStats
+@dataclass
+class ActivityStats:
+    """
+    a set of rolled-up statistics and totals for an athlete
+    """
+    biggest_ride_distance: float = 0.0
+    biggest_climb_elevation_gain: float = 0.0
+    recent_ride_totals: ActivityTotal = None
+    ytd_ride_totals: ActivityTotal = None
+    all_ride_totals: ActivityTotal = None
+
+
+# https://developers.strava.com/docs/reference/#api-models-DetailedSegmentEffort
+@dataclass
+class DetailedSegmentEffort:
+    """
+    detailed segment effort model
+    """
+    id: int = 0
+    activity_id: int = 0
+    elapsed_time: int = 0
+    start_date: datetime.datetime = datetime.datetime.now()
+    distance: float = 0.0
+    name: str = ""
+    athlete: id = 0
+    moving_time: int = 0
+    average_heartrate: float = 0.0
+    max_heartrate: float = 0.0
+
+
+# https://developers.strava.com/docs/reference/#api-models-DetailedAthlete
+@dataclass
+class DetailedAthlete:
+    """
+    detailed activity model
+    """
+    id: int = 0
+    firstname: str = ""
+    lastname: str = ""
+    profile: str = ""
+    city: str = ""
+    state: str = ""
+    country: str = ""
+    sex: str = ""
+
+
+# https://developers.strava.com/docs/reference/#api-models-SummaryActivity
 @dataclass
 class SummaryActivity:
     """
