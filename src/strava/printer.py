@@ -1,7 +1,12 @@
-from strava.models import SummaryActivity
-
-from dataclasses import dataclass, field
+from dataclasses import dataclass, fields, field
 from prettytable import PrettyTable
+
+from strava.models import (
+    SummaryActivity,
+    DetailedAthlete,
+    ActivityStats,
+    # ActivityTotal
+)
 
 
 @dataclass
@@ -52,6 +57,41 @@ class Printer:
         """
         activities_with_avg = SummaryActivity().get_avg_row_data(activities)
         return activities_with_avg
+
+    def print_athlete(self, athlete: DetailedAthlete) -> None:
+        """
+        print athlete table
+        """
+        self.printer.field_names = [field.name for field in fields(athlete)]
+        row = [
+            athlete.id,
+            athlete.firstname,
+            athlete.lastname,
+            athlete.profile,
+            athlete.city,
+            athlete.state,
+            athlete.country,
+            athlete.sex
+        ]
+        self.printer.add_row(row)
+        print(self.printer)
+        return
+
+    def print_athlete_stats(self, activity_stats: ActivityStats):
+        """
+        print athlete stats
+        """
+        self.printer.field_names = [field.name for field in fields(activity_stats)]
+        row = [
+            activity_stats.biggest_ride_distance,
+            activity_stats.biggest_climb_elevation_gain,
+            activity_stats.recent_ride_totals,
+            activity_stats.ytd_ride_totals,
+            activity_stats.all_ride_totals
+        ]
+        self.printer.add_row(row)
+        print(self.printer)
+        return
 
     def print_summary(self):
         """
