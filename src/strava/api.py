@@ -6,8 +6,10 @@ from strava.models import (
     DetailedAthlete,
     SummaryActivity,
     # DetailedSegmentEffort,
+    DetailedSegment,
     ActivityTotal,
-    ActivityStats
+    ActivityStats,
+    PolylineMap
 )
 
 
@@ -113,9 +115,49 @@ class API:
 
         return stats
 
+    def get_segment(self, id) -> DetailedSegment:
+        """
+        return the specified segment
+        """
+        url = self.generate_url(f"segments/{id}")
+        status_code, data = self.get(url)
+
+        if status_code != 200:
+            print(f"{status_code=}, {data=}")
+            return
+
+        segment_map = PolylineMap(
+            id=data["map"]["id"],
+            polyline=data["map"]["polyline"],
+            # summary_polyline=data["map"]["summary_polyline"],
+        )
+
+        segment = DetailedSegment(
+            segment_id=data["id"],
+            name=data["name"],
+            activity_type=data["activity_type"],
+            distance=data["distance"],
+            average_grade=data["average_grade"],
+            maximum_grade=data["maximum_grade"],
+            elevation_high=data["elevation_high"],
+            elevation_low=data["elevation_low"],
+            climb_category=data["climb_category"],
+            city=data["city"],
+            state=data["state"],
+            country=data["country"],
+            total_elevation_gain=data["total_elevation_gain"],
+            effort_count=data["effort_count"],
+            athlete_count=data["athlete_count"],
+            hazardous=data["hazardous"],
+            star_count=data["star_count"],
+            segment_map=segment_map
+        )
+
+        return segment
+
     def get_segment_efforts(self) -> list:
         """
-        get the set of the athletes segment efoofrts for a given segment
+        get the set of the athletes segment efforts for a given segment
         """
         url = self.generate_url("athlete")
         status_code, data = self.get(url)
