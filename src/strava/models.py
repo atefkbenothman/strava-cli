@@ -4,6 +4,16 @@ from pydantic import BaseModel
 from typing import Optional
 
 
+@dataclass
+class PolylineMap:
+    """
+    polyline map
+    """
+    id: int = 0
+    polyline: str = ""
+    summary_polyline: str = ""
+
+
 # https://developers.strava.com/docs/reference/#api-models-ActivityTotal
 @dataclass
 class ActivityTotal(BaseModel):
@@ -29,6 +39,31 @@ class ActivityStats(BaseModel):
     recent_ride_totals: ActivityTotal
     ytd_ride_totals: ActivityTotal
     all_ride_totals: ActivityTotal
+
+
+@dataclass
+class DetailedSegment:
+    """
+    detailed segment
+    """
+    segment_id: int = 0
+    name: str = ""
+    activity_type: str = ""
+    distance: float = 0.0
+    average_grade: float = 0.0
+    maximum_grade: float = 0.0
+    elevation_high: float = 0.0
+    elevation_low: float = 0.0
+    climb_category: int = -1
+    city: str = ""
+    state: str = ""
+    country: str = ""
+    total_elevation_gain: float = 0.0
+    effort_count: int = 0
+    athlete_count: int = 0
+    hazardous: bool = False
+    star_count: int = 0
+    segment_map: str = ""
 
 
 # https://developers.strava.com/docs/reference/#api-models-DetailedSegmentEffort

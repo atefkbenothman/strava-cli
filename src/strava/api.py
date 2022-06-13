@@ -7,7 +7,7 @@ from strava.models import (
     DetailedAthlete,
     SummaryActivity,
     ActivityTotal,
-    ActivityStats
+    ActivityStats,
 )
 
 

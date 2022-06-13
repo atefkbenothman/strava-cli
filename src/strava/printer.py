@@ -5,6 +5,7 @@ from strava.models import (
     SummaryActivity,
     DetailedAthlete,
     ActivityStats,
+    DetailedSegment,
     # ActivityTotal
 )
 
@@ -72,6 +73,35 @@ class Printer:
             athlete.state,
             athlete.country,
             athlete.sex
+        ]
+        self.printer.add_row(row)
+        print(self.printer)
+        return
+
+    def print_detailed_segment(self, segment: DetailedSegment) -> None:
+        """
+        print detailed segment
+        """
+        self.printer.field_names = [field.name for field in fields(segment)]
+        row = [
+            segment.segment_id,
+            segment.name,
+            segment.activity_type,
+            segment.distance,
+            segment.average_grade,
+            segment.maximum_grade,
+            segment.elevation_high,
+            segment.elevation_low,
+            segment.climb_category,
+            segment.city,
+            segment.state,
+            segment.country,
+            segment.total_elevation_gain,
+            segment.effort_count,
+            segment.athlete_count,
+            segment.hazardous,
+            segment.star_count,
+            segment.segment_map,
         ]
         self.printer.add_row(row)
         print(self.printer)
