@@ -12,6 +12,7 @@ roadmap:
   [ ] add tests to new endpoints
   [ ] refactor all files
   [ ] get printer to a basic working point (does not need to be overkill)
+  [x] convert models to pydantic models
 
   0.3.0
   [ ] webapp
@@ -22,7 +23,6 @@ notes:
 [x] use `python3 -i <file_name>` to test your program interactively
 
 todo:
-[ ] convert models to pydantic models
 [ ] modify gh actions so tests only run when submitting PR to the develop branch
 [ ] write tests
 [ ] refactor printer class. should not take a list of activities...
