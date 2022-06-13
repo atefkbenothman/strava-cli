@@ -1,6 +1,6 @@
 import requests
 from urllib.parse import urljoin
-from dataclasses import dataclass
+from dataclasses import dataclass, fields, field
 from typing import Union, Optional
 
 from strava.models import (
@@ -29,8 +29,8 @@ class API:
         """
         return the newly constructed model
         """
-        fields_set = model.__fields_set__
-        return model.construct(_fields_set=fields_set, **data)
+        new_model = model(**data)
+        return new_model
 
     def _handle_response(self, response: requests.models.Response) -> Union[dict, None]:
         """
@@ -117,10 +117,14 @@ class API:
         data = self._get("athlete/activities", params=params)
 
         all_activities = []
-        for activity in data:
+        for idx, activity in enumerate(data):
+            if idx >= count:
+                break
+
             summary_activity = self._create_model(
                 model=SummaryActivity,
                 data=activity
             )
             all_activities.append(summary_activity)
+
         return all_activities

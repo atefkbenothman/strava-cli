@@ -1,3 +1,4 @@
+import pydantic.dataclasses
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 from pydantic import BaseModel, validator
@@ -5,7 +6,6 @@ from typing import Optional
 
 
 # https://developers.strava.com/docs/reference/#api-models-PolylineMap
-@dataclass
 class PolylineMap(BaseModel):
     """
     polyline map
@@ -16,7 +16,6 @@ class PolylineMap(BaseModel):
 
 
 # https://developers.strava.com/docs/reference/#api-models-ActivityTotal
-@dataclass
 class ActivityTotal(BaseModel):
     """
     a roll up of metrics pertaining to a set of activities
@@ -46,7 +45,6 @@ class ActivityTotal(BaseModel):
 
 
 # https://developers.strava.com/docs/reference/#api-models-ActivityStats
-@dataclass
 class ActivityStats(BaseModel):
     """
     a set of rolled-up statistics and totals for an athlete
@@ -67,7 +65,6 @@ class ActivityStats(BaseModel):
 
 
 # https://developers.strava.com/docs/reference/#api-models-DetailedSegment
-@dataclass
 class DetailedSegment(BaseModel):
     """
     detailed segment
@@ -92,7 +89,6 @@ class DetailedSegment(BaseModel):
 
 
 # https://developers.strava.com/docs/reference/#api-models-DetailedSegmentEffort
-@dataclass
 class DetailedSegmentEffort(BaseModel):
     """
     detailed segment effort model
@@ -110,7 +106,6 @@ class DetailedSegmentEffort(BaseModel):
 
 
 # https://developers.strava.com/docs/reference/#api-models-DetailedAthlete
-@dataclass
 class DetailedAthlete(BaseModel):
     """
     detailed athlete model
@@ -133,12 +128,11 @@ class DetailedAthlete(BaseModel):
     follower_count: int
     friend_count: int
     measurement_preference: str
-    ftp: int
+    ftp: Optional[int] = None
     weight: float
 
 
 # https://developers.strava.com/docs/reference/#api-models-SummaryActivity
-@dataclass
 class SummaryActivity(BaseModel):
     """
     summary activity model
@@ -152,7 +146,7 @@ class SummaryActivity(BaseModel):
     total_elevation_gain: float
     elev_high: float
     elev_low: float
-    type: dict
+    # type: dict
     start_date: datetime
     timezone: str
     average_speed: float

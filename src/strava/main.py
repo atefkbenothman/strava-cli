@@ -12,15 +12,17 @@ def main():
   auth.set_creds("./.creds.json")
   auth.authorize()
 
-  c: int = int(input("count: "))
-
   # api
   api = API(access_token=auth.access_token)
-  activities = api.get_activities(count=c)
+  athlete = api.get_athlete()
+  stats = api.get_athlete_stats(athlete.id)
+  activities = api.get_athlete_activities(30)
 
   # printer
-  printer = Printer(activities=activities)
-  printer.print_summary_with_total(count=c)
+  printer = Printer()
+  printer.print_athlete(athlete)
+  # printer.print_athlete_stats(stats)
+  printer.print_athlete_activities(activities)
 
   return
 
