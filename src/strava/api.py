@@ -1,15 +1,13 @@
 import requests
 from urllib.parse import urljoin
 from dataclasses import dataclass
+from typing import Union, Optional
 
 from strava.models import (
     DetailedAthlete,
     SummaryActivity,
-    # DetailedSegmentEffort,
-    DetailedSegment,
     ActivityTotal,
     ActivityStats,
-    PolylineMap
 )
 
 
@@ -21,182 +19,108 @@ class API:
     base_url: str = "https://www.strava.com/api/v3/"
     access_token: str = ""
 
-    def generate_url(self, endpoint: str) -> str:
+    def _generate_url(self, endpoint: str) -> str:
         """
         generate the api url endpoint
         """
         return urljoin(self.base_url, endpoint)
 
-    def get(self, url: str, params: dict = None) -> dict:
+    def _create_model(self, model, data: dict):
+        """
+        return the newly constructed model
+        """
+        fields_set = model.__fields_set__
+        return model.construct(_fields_set=fields_set, **data)
+
+    def _handle_response(self, response: requests.models.Response) -> Union[dict, None]:
+        """
+        return the json data from the response if the request was successful
+        """
+        if response.status_code != 200:
+            print(f"{response.status_code=}, {response.text=}")
+            return
+        return response.json()
+
+    def _get(self, url: str, params: dict = None) -> dict:
         """
         handle get requests
         """
+        full_url = self._generate_url(url)
         headers = {
             "Authorization": f"Bearer {self.access_token}"
         }
-        response = requests.get(url, headers=headers, params=params)
-        return response.status_code, response.json()
+        response = requests.get(full_url, headers=headers, params=params)
+        data = self._handle_response(response)
+        return data
 
     def get_athlete(self) -> DetailedAthlete:
         """
         get the current authenticated athlete.
         """
-        url = self.generate_url("athlete")
-        status_code, data = self.get(url)
-
-        if status_code != 200:
-            print(f"{status_code=}, {data=}")
-            return
-
-        athlete = DetailedAthlete(
-            id=data["id"],
-            firstname=data["firstname"],
-            lastname=data["lastname"],
-            profile=data["profile"],
-            city=data["city"],
-            state=data["state"],
-            country=data["country"],
-            sex=data["sex"]
+        data = self._get("athlete")
+        athlete = self._create_model(
+            model=DetailedAthlete,
+            data=data
         )
-
         return athlete
 
-    def get_athlete_stats(self) -> ActivityStats():
+    def get_athlete_stats(self, athlete_id: Optional[int] = None) -> ActivityStats:
         """
-        get the activity stats of an athlete
+        return the stats of the athlete that was specified. if no athlete was specified,
+        get the current logged in user
         """
-        athlete: DetailedAthlete = self.get_athlete()
+        if athlete_id is None:
+            athlete: DetailedAthlete = self.get_athlete()
+            athlete_id = athlete.id
 
-        url = self.generate_url(f"athletes/{athlete.id}/stats")
-        status_code, data = self.get(url)
+        url = f"athletes/{athlete_id}/stats"
+        data = self._get(url)
 
-        print(url)
-
-        if status_code != 200:
-            print(f"{status_code=}, {data=}")
-            return
-
-        print(data)
-
-        recent_ride_totals = ActivityTotal(
-            count=data["recent_ride_totals"]["count"],
-            distance=data["recent_ride_totals"]["distance"],
-            moving_time=data["recent_ride_totals"]["moving_time"],
-            elapsed_time=data["recent_ride_totals"]["elapsed_time"],
-            elevation_gain=data["recent_ride_totals"]["elevation_gain"],
-            achievement_count=data["recent_ride_totals"]["achievement_count"],
+        recent_ride_totals = self._create_model(
+            model=ActivityTotal,
+            data=data["recent_ride_totals"]
         )
 
-        ytd_ride_totals = ActivityTotal(
-            count=data["ytd_ride_totals"]["count"],
-            distance=data["ytd_ride_totals"]["distance"],
-            moving_time=data["ytd_ride_totals"]["moving_time"],
-            elapsed_time=data["ytd_ride_totals"]["elapsed_time"],
-            elevation_gain=data["ytd_ride_totals"]["elevation_gain"],
-            # achievement_count=data["ytd_ride_totals"]["achievement_count"],
+        ytd_ride_totals = self._create_model(
+            model=ActivityTotal,
+            data=data["ytd_ride_totals"]
         )
 
-        all_ride_totals = ActivityTotal(
-            count=data["all_ride_totals"]["count"],
-            distance=data["all_ride_totals"]["distance"],
-            moving_time=data["all_ride_totals"]["moving_time"],
-            elapsed_time=data["all_ride_totals"]["elapsed_time"],
-            elevation_gain=data["all_ride_totals"]["elevation_gain"],
-            # achievement_count=data["all_ride_totals"]["achievement_count"],
+        all_ride_totals = self._create_model(
+            model=ActivityTotal,
+            data=data["all_ride_totals"]
         )
 
-        stats = ActivityStats(
-            biggest_ride_distance=data["biggest_ride_distance"],
-            biggest_climb_elevation_gain=data["biggest_climb_elevation_gain"],
-            recent_ride_totals=recent_ride_totals,
-            ytd_ride_totals=ytd_ride_totals,
-            all_ride_totals=all_ride_totals
+        data = {
+            "biggest_ride_distance": data["biggest_ride_distance"],
+            "biggest_climb_elevation_gain": data["biggest_climb_elevation_gain"],
+            "recent_ride_totals": recent_ride_totals,
+            "ytd_ride_totals": ytd_ride_totals,
+            "all_ride_totals": all_ride_totals
+        }
+        stats = self._create_model(
+            model=ActivityStats,
+            data=data
         )
-
         return stats
 
-    def get_segment(self, id) -> DetailedSegment:
+    def get_athlete_activities(self, count: Optional[int] = None) -> list:
         """
-        return the specified segment
+        returns the activities of the currently authenticated user
         """
-        url = self.generate_url(f"segments/{id}")
-        status_code, data = self.get(url)
+        if count is None:
+            count = 30
 
-        if status_code != 200:
-            print(f"{status_code=}, {data=}")
-            return
-
-        segment_map = PolylineMap(
-            id=data["map"]["id"],
-            polyline=data["map"]["polyline"],
-            # summary_polyline=data["map"]["summary_polyline"],
-        )
-
-        segment = DetailedSegment(
-            segment_id=data["id"],
-            name=data["name"],
-            activity_type=data["activity_type"],
-            distance=data["distance"],
-            average_grade=data["average_grade"],
-            maximum_grade=data["maximum_grade"],
-            elevation_high=data["elevation_high"],
-            elevation_low=data["elevation_low"],
-            climb_category=data["climb_category"],
-            city=data["city"],
-            state=data["state"],
-            country=data["country"],
-            total_elevation_gain=data["total_elevation_gain"],
-            effort_count=data["effort_count"],
-            athlete_count=data["athlete_count"],
-            hazardous=data["hazardous"],
-            star_count=data["star_count"],
-            segment_map=segment_map
-        )
-
-        return segment
-
-    def get_segment_efforts(self) -> list:
-        """
-        get the set of the athletes segment efforts for a given segment
-        """
-        url = self.generate_url("athlete")
-        status_code, data = self.get(url)
-
-        if status_code != 200:
-            print(f"{status_code=}, {data=}")
-            return
-
-        print(data)
-
-        return
-
-    def get_activities(self, count: int = 0) -> list:
-        """
-        TODO: refactor entire function...
-        get athlete activities. if count param set to 0, get all
-        """
-        url = self.generate_url("athlete/activities")
         params = {
-            "per_page": count
+            "page_count": count
         }
-        status_code, data = self.get(url, params=params)
-
-        if status_code != 200:
-            print(f"{status_code=}, {data=}")
-            return
+        data = self._get("athlete/activities", params=params)
 
         all_activities = []
-        for c, activity in enumerate(data):
-            act = SummaryActivity(
-                id=c+1,
-                name=activity["name"],
-                distance=activity["distance"],
-                moving_time=activity["moving_time"],
-                elapsed_time=activity["elapsed_time"],
-                total_elevation_gain=activity["total_elevation_gain"],
-                avg_speed=activity["average_speed"],
-                max_speed=activity["max_speed"]
+        for activity in data:
+            summary_activity = self._create_model(
+                model=SummaryActivity,
+                data=activity
             )
-            all_activities.append(act)
-
+            all_activities.append(summary_activity)
         return all_activities

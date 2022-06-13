@@ -17,6 +17,7 @@ roadmap:
   [ ] add tests to new endpoints
   [ ] refactor all files
   [ ] get printer to a basic working point (does not need to be overkill)
+  [x] convert models to pydantic models
 
   0.5.0
   [ ] webapp
