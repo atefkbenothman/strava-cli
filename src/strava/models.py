@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from dataclasses import dataclass
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from typing import Optional
 
 
@@ -28,6 +28,22 @@ class ActivityTotal(BaseModel):
     elapsed_time: int
     achievement_count: Optional[int] = None
 
+    @property
+    def distance_in_miles(self) -> str:
+        return f"{self.distance * 0.000621371192:,.2f}"
+
+    @property
+    def elevation_gain_in_feet(self) -> str:
+        return f"{self.elevation_gain / 0.3048:,.2f}"
+
+    @property
+    def moving_time_in_hours(self) -> str:
+        return timedelta(seconds=self.moving_time)
+
+    @property
+    def elapsed_time_in_hours(self) -> str:
+        return timedelta(seconds=self.elapsed_time)
+
 
 # https://developers.strava.com/docs/reference/#api-models-ActivityStats
 @dataclass
@@ -40,6 +56,14 @@ class ActivityStats(BaseModel):
     recent_ride_totals: ActivityTotal
     ytd_ride_totals: ActivityTotal
     all_ride_totals: ActivityTotal
+
+    @property
+    def biggest_ride_distance_in_miles(self) -> str:
+        return f"{self.biggest_ride_distance * 0.000621371192:,.2f}"
+
+    @property
+    def biggest_climb_elevation_gain_in_feet(self) -> str:
+        return f"{self.biggest_climb_elevation_gain / 0.3048:,.2f}"
 
 
 # https://developers.strava.com/docs/reference/#api-models-DetailedSegment

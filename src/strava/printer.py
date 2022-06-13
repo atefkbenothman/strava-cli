@@ -1,12 +1,12 @@
 from dataclasses import dataclass, fields, field
 from prettytable import PrettyTable
-
+from typing import Optional
 from strava.models import (
     SummaryActivity,
     DetailedAthlete,
     ActivityStats,
+    ActivityTotal,
     DetailedSegment,
-    # ActivityTotal
 )
 
 
@@ -15,146 +15,93 @@ class Printer:
     """
     handles printing tables
     """
-    printer = PrettyTable()
-    activities: list = field(default_factory=list)
+    printer: PrettyTable = PrettyTable(
+        padding_width=1
+    )
 
-    def get_columns(self) -> list:
+    def _print(self, model, field_names: Optional[list] = None, title: Optional[str] = None) -> None:
         """
-        get the columns for the table
+        print the api model in a table format
         """
-        fields = SummaryActivity().get_fields()
-        return fields
+        # clear all data from table
+        self.printer.clear()
 
-    def get_rows(self, activities: list) -> list:
-        """
-        get the rows for the table
-        """
-        rows = []
-        for activity in activities:
-            rows.append(activity.get_row_data())
-        return rows
+        # if field names weren't specified, use all
+        if field_names is None:
+            field_names = model.dict().keys()
 
-    def get_activities(self, count: int = 100) -> list:
-        """
-        get the rows for the table
-        """
-        activities = []
-        for c, activity in enumerate(self.activities):
-            if c >= count:
-                break
-            activities.append(activity)
-        return activities
+        # if title isn't specified, use model name instead
+        if title is None:
+            title = type(model).__name__
 
-    def get_totals_row(self, activities: list) -> list:
-        """
-        get the totals row for the table
-        """
-        activities_with_total = SummaryActivity().get_totals_row_data(activities)
-        return activities_with_total
+        row = []
+        for field_name in field_names:
+            data = eval(f"model.{field_name}")
+            row.append(data)
 
-    def get_avg_row(self, activities: list) -> list:
-        """
-        get the avg row for the table
-        """
-        activities_with_avg = SummaryActivity().get_avg_row_data(activities)
-        return activities_with_avg
+        # set printer fields
+        self.printer._title = title
+        self.printer.field_names = field_names
+        self.printer.add_row(row)
+
+        # print
+        print()
+        print(self.printer)
+        print()
+        return
 
     def print_athlete(self, athlete: DetailedAthlete) -> None:
         """
-        print athlete table
+        print athlete data
         """
-        self.printer.field_names = [field.name for field in fields(athlete)]
-        row = [
-            athlete.id,
-            athlete.firstname,
-            athlete.lastname,
-            athlete.profile,
-            athlete.city,
-            athlete.state,
-            athlete.country,
-            athlete.sex
+        fields_to_print = [
+            "id",
+            "firstname",
+            "lastname",
+            "city",
+            "state",
+            "country",
+            "sex",
+            "premium",
+            "created_at",
+            "updated_at",
         ]
-        self.printer.add_row(row)
-        print(self.printer)
+        self._print(athlete, field_names=fields_to_print, title="athlete")
         return
 
-    def print_detailed_segment(self, segment: DetailedSegment) -> None:
+    def print_totals(self, activity_total: ActivityTotal, key: Optional[str] = None) -> None:
         """
-        print detailed segment
+        print activity total model
+        key specifies what range of totals we are printing
         """
-        self.printer.field_names = [field.name for field in fields(segment)]
-        row = [
-            segment.segment_id,
-            segment.name,
-            segment.activity_type,
-            segment.distance,
-            segment.average_grade,
-            segment.maximum_grade,
-            segment.elevation_high,
-            segment.elevation_low,
-            segment.climb_category,
-            segment.city,
-            segment.state,
-            segment.country,
-            segment.total_elevation_gain,
-            segment.effort_count,
-            segment.athlete_count,
-            segment.hazardous,
-            segment.star_count,
-            segment.segment_map,
+        fields_to_print = [
+            "count",
+            "distance_in_miles",
+            "elevation_gain_in_feet",
+            "moving_time_in_hours",
+            "elapsed_time_in_hours",
+            "achievement_count"
         ]
-        self.printer.add_row(row)
-        print(self.printer)
+        self._print(activity_total, field_names=fields_to_print, title=key)
         return
 
-    def print_athlete_stats(self, activity_stats: ActivityStats):
+    def print_athlete_stats(self, stats: ActivityStats) -> None:
         """
-        print athlete stats
+        print athlete stats data
+        split each model into its own table
         """
-        self.printer.field_names = [field.name for field in fields(activity_stats)]
-        row = [
-            activity_stats.biggest_ride_distance,
-            activity_stats.biggest_climb_elevation_gain,
-            activity_stats.recent_ride_totals,
-            activity_stats.ytd_ride_totals,
-            activity_stats.all_ride_totals
-        ]
-        self.printer.add_row(row)
-        print(self.printer)
-        return
+        recent_ride_totals: ActivityTotal = stats.recent_ride_totals
+        self.print_totals(recent_ride_totals, key="recent_ride_totals")
 
-    def print_summary(self):
-        """
-        print summary table
-        """
-        if self.activities is None:
-            print("no activities...")
-            return
+        ytd_ride_totals: ActivityTotal = stats.ytd_ride_totals
+        self.print_totals(ytd_ride_totals, key="ytd_ride_totals")
 
-        self.printer.field_names = self.get_columns()
-        self.printer.add_rows(self.get_activities(count=5))
+        all_ride_totals: ActivityTotal = stats.all_ride_totals
+        self.print_totals(all_ride_totals, key="all_ride_totals")
 
-        print(self.printer)
-        return
-
-    def print_summary_with_total(self, count: int = 10):
-        """
-        does the same thing as print summary but adds the 'total' row to the table
-        """
-        if self.activities is None:
-            print("no activities...")
-            return
-
-        self.printer.field_names = self.get_columns()
-
-        # set the alignment to the right
-        self.printer.align = "r"
-
-        # add total row
-        acts = self.get_activities(count=count)
-        rows = self.get_rows(self.get_avg_row(acts))
-
-        self.printer.add_rows(rows)
-
-        print(self.printer)
+        data = {
+            "biggest_ride_distance_in_miles",
+            "biggest_climb_elevation_gain_in_feet"
+        }
+        self._print(stats, field_names=data, title="totals")
         return
