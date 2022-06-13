@@ -4,14 +4,15 @@ from pydantic import BaseModel
 from typing import Optional
 
 
+# https://developers.strava.com/docs/reference/#api-models-PolylineMap
 @dataclass
-class PolylineMap:
+class PolylineMap(BaseModel):
     """
     polyline map
     """
-    id: int = 0
-    polyline: str = ""
-    summary_polyline: str = ""
+    id: int
+    polyline: str
+    summary_polyline: Optional[str] = None
 
 
 # https://developers.strava.com/docs/reference/#api-models-ActivityTotal
@@ -41,29 +42,29 @@ class ActivityStats(BaseModel):
     all_ride_totals: ActivityTotal
 
 
+# https://developers.strava.com/docs/reference/#api-models-DetailedSegment
 @dataclass
-class DetailedSegment:
+class DetailedSegment(BaseModel):
     """
     detailed segment
     """
-    segment_id: int = 0
-    name: str = ""
-    activity_type: str = ""
-    distance: float = 0.0
-    average_grade: float = 0.0
-    maximum_grade: float = 0.0
-    elevation_high: float = 0.0
-    elevation_low: float = 0.0
-    climb_category: int = -1
-    city: str = ""
-    state: str = ""
-    country: str = ""
-    total_elevation_gain: float = 0.0
-    effort_count: int = 0
-    athlete_count: int = 0
-    hazardous: bool = False
-    star_count: int = 0
-    segment_map: str = ""
+    id: int
+    name: str
+    activity_type: str
+    distance: float
+    average_grade: float
+    maximum_grade: float
+    elevation_high: float
+    elevation_low: float
+    climb_category: int
+    city: str
+    state: str
+    country: str
+    total_elevation_gain: float
+    effort_count: int
+    athlete_count: int
+    hazardous: bool
+    star_count: int
 
 
 # https://developers.strava.com/docs/reference/#api-models-DetailedSegmentEffort
